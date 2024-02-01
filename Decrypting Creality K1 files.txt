@@ -82,3 +82,8 @@ Secret Key - hEPPNBcEBm5Crc4V
 Select Mode - CBC
 IV - rk7tbGWMEkxyz6Gm
 Output/Input format - Base64
+
+Encrypted files found so far:
+"/usr/data/creality/userdata/config/cxsw_params.json"
+"/usr/data/creality/userdata/config/cxsw_tb_info.json"
+"/usr/data/creality/userdata/config/user_data_not_deleted.json"
