@@ -1,6 +1,6 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 + Decrypting Creality K1 files such as "/usr/data/creality/userdata/config/cxsw_params.json" and "/usr/data/creality/userdata/config/cxsw_tb_info.json"  +
-+ Colt45RPM - https://github.com/colt45rpm                                                                                                                 +
++ Colt45RPM - https://github.com/colt45rpm                                                                                                               +
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 If you perform a 'strings -n 16 master-server | less' on '/usr/bin/master_server' you will eventually notice this among the "normal" looking output:
