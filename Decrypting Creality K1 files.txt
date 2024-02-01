@@ -1,0 +1,84 @@
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
++ Decrypting Creality K1 files such as "/usr/data/creality/userdata/config/cxsw_params.json" and "/usr/data/creality/userdata/config/cxsw_tb_info.json"  +
++ Colt45RPM - https://github.com/colt45rpm                                                                                                                 +
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+If you perform a 'strings -n 16 master-server | less' on '/usr/bin/master_server' you will eventually notice this among the "normal" looking output:
+
+          [%s]-[%s](%d) %s
+          ?length is not a multiple of 16 bytes
+          hEPPNBcEBm5Crc4Vgjm5AGn5g8mWkWjDvX38RMyZ7wbCxu3XuyT5kDMa72v5BBFRa
+          rk7tbGWMEkxyz6GmV9y4qG3FjEt6CxChz
+          [%s]-[%s](%d) can't open %s
+          SystemCmd/SystemCmd.c
+
+The "length is not a multiple of 16 bytes" followed by a few odd character strings could be encryption info. 
+You also now see why I used the option to look for characters of at least 16 in my strings command line.
+
+Loading the master-server into Ghidra (https://github.com/NationalSecurityAgency/ghidra) we can now search for these odd strings.
+The first larger string "hEPPNBcEBm5Crc4Vgjm5AGn5g8mWkWjDvX38RMyZ7wbCxu3XuyT5kDMa72v5BBFRa" is referenced in two functions.
+When using the Decompile View in Ghidra we see the first function as follows:
+
+          bool FUN_004963f0(uchar *param_1,uchar *param_2,uint param_3)
+
+          {
+            bool bVar1;
+            AES_KEY AStack_130;
+            uchar auStack_3c [16];
+            uchar auStack_2c [24];
+            
+            bVar1 = (param_3 & 0xf) == 0;
+            if (bVar1) {
+              memcpy(auStack_2c,"hEPPNBcEBm5Crc4Vgjm5AGn5g8mWkWjDvX38RMyZ7wbCxu3XuyT5kDMa72v5BBFRa",0x10);
+              memcpy(auStack_3c,"rk7tbGWMEkxyz6GmV9y4qG3FjEt6CxChz",0x10);
+              AES_set_encrypt_key(auStack_2c,0x80,&AStack_130);
+              AES_cbc_encrypt(param_1,param_2,param_3,&AStack_130,auStack_3c,1);
+            }
+            else {
+              puts("length is not a multiple of 16 bytes");
+            }
+            return bVar1;
+          }
+
+This function performs the following steps:
+Creates a place holder for the expanded AES_Key
+Loads the first 16 characters of the larger string into auStack_2c
+Loads the first 16 characters of the shorter string info auStack_3c
+Creates the final AES_Key with the AES_set_encrypt_key call
+Encrypts the passed data using CBC mode with the AES_Key and auStack_3c as the IV.
+
+The opposite is done for the decrypt function:
+
+          bool FUN_004964ac(uchar *param_1,uchar *param_2,uint param_3)
+
+          {
+            bool bVar1;
+            AES_KEY AStack_130;
+            uchar auStack_3c [16];
+            uchar auStack_2c [24];
+            
+            bVar1 = (param_3 & 0xf) == 0;
+            if (bVar1) {
+              memcpy(auStack_2c,"hEPPNBcEBm5Crc4Vgjm5AGn5g8mWkWjDvX38RMyZ7wbCxu3XuyT5kDMa72v5BBFRa",0x10);
+              memcpy(auStack_3c,"rk7tbGWMEkxyz6GmV9y4qG3FjEt6CxChz",0x10);
+              AES_set_decrypt_key(auStack_2c,0x80,&AStack_130);
+              AES_cbc_encrypt(param_1,param_2,param_3,&AStack_130,auStack_3c,0);
+            }
+            else {
+              puts("length is not a multiple of 16 bytes");
+            }
+            return bVar1;
+          }
+
+An easy way to encrypt/decrypt these files if you choose is online at https://anycript.com
+
+They mention the following on the site:
+"The data you enter on Anycript is safe and secure. We are not saving your data and not sending it to a server. Anycript is a client-side tool. All the processes are executed in your web browser."
+As always, it's your choice.
+
+Paste your encrypted or plaintext into the AES Encryption or AES Decryption locations using the following info:
+Secret Key - hEPPNBcEBm5Crc4V
+128 Bits
+Select Mode - CBC
+IV - rk7tbGWMEkxyz6Gm
+Output/Input format - Base64
